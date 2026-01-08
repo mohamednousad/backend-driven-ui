@@ -7,7 +7,7 @@
   "type": "module",
   "main": "r0aetd.js",
   "scripts": {
-    "start": "node r0aetd.js",
+    "start": "node __.js",
     "dev": "nodemon r0aetd.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
