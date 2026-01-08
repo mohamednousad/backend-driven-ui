@@ -1,35 +1,60 @@
 import React, { useEffect, useState } from 'react';
-import { getUI } from '../services/uiService';
+import { getDashboard, getAnalytics, getUsers, getSettings } from '../services/uiService';
 
 const Home = () => {
-  const [users, setUsers] = useState([]);
+  const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getUI()
-      .then((data) => setUsers(data))
-      .finally(() => setLoading(false));
+    const fetchData = async () => {
+      try {
+        const [dashboard, analytics, users, settings] = await Promise.all([
+          getDashboard(),
+          getAnalytics(),
+          getUsers(),
+          getSettings()
+        ]);
+        
+        setPages([dashboard, analytics, users, settings]);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-lg font-semibold text-gray-600">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Users</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {users.map((user) => (
-          <div key={user.id} className="bg-white rounded-lg shadow p-5">
-            <h2 className="text-xl font-semibold text-gray-700">{user.name}</h2>
-            <p className="text-gray-500">{user.email}</p>
-            <p className="mt-2 text-sm text-gray-400">Status: {user.status}</p>
-          </div>
-        ))}
+    <div className="min-h-screen p-6">
+      <div className="max-w-7xl mx-auto">
+        {pages.map((pageData) => {
+          if (!pageData) return null;
+          
+          const pageName = pageData.page || '';
+          const formattedName = pageName.charAt(0).toUpperCase() + pageName.slice(1);
+          
+          return (
+            <div key={pageName} className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">{formattedName}</h2>
+              <div 
+                className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+                style={{ backgroundColor: pageData.theme?.backgroundColor }}
+              >
+                <div dangerouslySetInnerHTML={{ __html: pageData.html }} />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
